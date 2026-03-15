@@ -1,6 +1,8 @@
 const mineflayer = require('mineflayer')
 const { pathfinder, Movements } = require('mineflayer-pathfinder')
 const mcDataLoader = require('minecraft-data')
+const { mineflayer: mineflayerViewer } = require('prismarine-viewer')
+const toolPlugin = require('mineflayer-tool').plugin
 
 const fs = require('fs')
 const path = require('path')
@@ -31,6 +33,7 @@ function createBot() {
   currentBot = bot
 
   bot.loadPlugin(pathfinder)
+  bot.loadPlugin(toolPlugin)
 
   // Bot states
   bot.isMining = false
@@ -76,6 +79,16 @@ function createBot() {
     )
 
     console.log(`${getTime()} ${botUsername} spawned.`)
+    
+    // START VIEWER
+    try {
+      if (!bot.viewer) {
+        mineflayerViewer(bot, { port: config.viewerPort || 3007, firstPerson: true })
+        console.log(`${getTime()} [Viewer] Started on port ${config.viewerPort || 3007}`)
+      }
+    } catch (err) {
+      console.log(`${getTime()} [Viewer Error] ${err.message}`)
+    }
   })
 
   // ---------------------------
@@ -95,11 +108,17 @@ function createBot() {
 
   bot.on('end', () => {
 
-    console.log(
-      `${getTime()} [SYSTEM] Disconnected. Reconnecting in ${config.autoRejoinIn / 1000}s...`
-    )
 
-    setTimeout(createBot, config.autoRejoinIn)
+    console.log(`${getTime()} [SYSTEM] Disconnected.`);
+    if(config.autoRejoin) {
+       setTimeout(createBot, config.autoRejoinIn)
+       console.log(
+      `Reconnecting in ${config.autoRejoinIn / 1000}s...`
+    )
+    }
+ 
+
+ 
   })
 
   // ---------------------------
